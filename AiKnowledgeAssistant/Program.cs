@@ -1,9 +1,18 @@
 using AiKnowledgeAssistant.Endpoints;
-using AiKnowledgeAssistant.Services.Azure;
+using AiKnowledgeAssistant.Extensions;
+using AiKnowledgeAssistant.Services.Azure.KeyVault;
+using AiKnowledgeAssistant.Services.AzureOpenAI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-AzureKeyVault.AddAzureKeyVault();
+// Azure Resources
+AzureKeyVault.ConfigureKeyVault(builder);
+BlobStorageServiceExtension.SetBlobStorage(builder.Services);
+
+// OpenAI Models
+GPT_4_Model.ConfigureChatGPT4();
+TextEmbeddingServiceExtension.SetTextEmbeddingModel(builder.Services);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
