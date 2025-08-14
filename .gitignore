@@ -3,9 +3,6 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-# ignore .env_template
-**/.env_template
-
 # User-specific files
 *.rsuser
 *.suo
