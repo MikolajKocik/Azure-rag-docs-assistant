@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
+using DotNetEnv;
 using OpenAI;
 using OpenAI.Embeddings;
 
@@ -12,6 +13,8 @@ public sealed class TextEmbeddingService
 
     public TextEmbeddingService(IConfiguration cfg)
     {
+        Env.Load();
+
         var endpoint = new Uri(Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")
             ?? throw new ArgumentException("Azure OpenAI endpoint not found"));
 
