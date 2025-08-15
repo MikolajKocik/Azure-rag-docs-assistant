@@ -1,5 +1,6 @@
 using AiKnowledgeAssistant.Endpoints;
 using AiKnowledgeAssistant.Extensions;
+using AiKnowledgeAssistant.Services.Azure.AppInsights;
 using AiKnowledgeAssistant.Services.Azure.KeyVault;
 using AiKnowledgeAssistant.Services.AzureOpenAI.Models;
 
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Azure Resources
 AzureKeyVault.ConfigureKeyVault(builder);
+ApplicationInsightsService.ConfigureAppInsights(builder);
 BlobStorageServiceExtension.SetBlobStorage(builder.Services);
 
 // OpenAI Models
@@ -29,6 +31,7 @@ else
     app.UseHttpsRedirection();
 }
 
+UploadBlob.MapUploadBlobEndpoint(app);
 HealthCheck.MapHealthCheckEndpoint(app);
 
 await app.RunAsync();

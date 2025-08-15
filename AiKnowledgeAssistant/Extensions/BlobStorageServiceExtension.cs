@@ -13,6 +13,8 @@ public static class BlobStorageServiceExtension
             var secretClient = provider.GetRequiredService<SecretClient>();
             var blobService = new BlobStorageService(secretClient);
 
+            blobService.InitializeAsync().GetAwaiter().GetResult();
+
             return blobService;
         });
     }
