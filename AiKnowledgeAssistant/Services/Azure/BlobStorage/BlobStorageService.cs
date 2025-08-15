@@ -3,7 +3,7 @@ using Azure.Storage.Blobs;
 
 namespace AiKnowledgeAssistant.Services.Azure.BlobStorage;
 
-public sealed class BlobStorageService
+public sealed class BlobStorageService : IBlobStorageService
 {
     private BlobContainerClient? _containerClient;
     private readonly SecretClient _secretClient;

@@ -7,14 +7,12 @@ namespace AiKnowledgeAssistant.Services.AzureOpenAI.Models;
 
 public static class GPT_4_Model
 {
-    public static void ConfigureChatGPT4()
+    public static void ConfigureChatGPT4(this WebApplicationBuilder builder)
     {
-        Env.Load();
-
-        var endpoint = new Uri(Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")
+        var endpoint = new Uri(builder.Configuration["AZURE_OPENAI_ENDPOINT"]
             ?? throw new ArgumentException("Azure OpenAI endpoint not found"));
 
-        string apiKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_KEY")
+        string apiKey = builder.Configuration["AZURE_OPENAI_KEY"]
              ?? throw new ArgumentException("Azure OpenAI api key not found");
         string deploymentName = "gpt-4-chat";
 

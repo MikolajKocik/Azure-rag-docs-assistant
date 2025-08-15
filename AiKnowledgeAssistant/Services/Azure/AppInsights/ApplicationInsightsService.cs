@@ -7,9 +7,7 @@ namespace AiKnowledgeAssistant.Services.Azure.AppInsights
     {
         public static void ConfigureAppInsights(this WebApplicationBuilder builder)
         {
-            Env.Load();
-
-            string? appConn = Env.GetString("APPLICATIONINSIGHTS_CONNECTION_STRING"); 
+            string? appConn = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]; 
 
             builder.Logging.AddApplicationInsights(
                 configureTelemetryConfiguration: (cfg) =>

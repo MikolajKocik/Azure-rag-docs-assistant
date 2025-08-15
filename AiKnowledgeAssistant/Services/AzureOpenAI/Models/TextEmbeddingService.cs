@@ -11,14 +11,12 @@ public sealed class TextEmbeddingService
     private readonly AzureOpenAIClient _openAIClient;
     private readonly string _deploymentName = "text-embedding-ada-002";
 
-    public TextEmbeddingService(IConfiguration cfg)
+    public TextEmbeddingService(IConfiguration cfg, WebApplicationBuilder builder)  
     {
-        Env.Load();
-
-        var endpoint = new Uri(Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")
+        var endpoint = new Uri(builder.Configuration["AZURE_OPENAI_ENDPOINT"]
             ?? throw new ArgumentException("Azure OpenAI endpoint not found"));
 
-        var apiKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_KEY")
+        var apiKey = builder.Configuration["AZURE_OPENAI_KEY"]
             ?? throw new ArgumentException("Azure OpenAI api key not found");
 
 
