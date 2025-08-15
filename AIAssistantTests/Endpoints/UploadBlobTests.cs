@@ -18,11 +18,14 @@ public sealed class UploadBlobTests : IClassFixture<WebApplicationFactory<Progra
         {
             builder.ConfigureServices(services =>
             {
-                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IBlobStorageService));
+                var descriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(IBlobStorageService));
+
                 if (descriptor != null)
                 {
                     services.Remove(descriptor);
                 }
+
                 services.AddSingleton<IBlobStorageService, InMemoryBlobStorageService>();
             });
         });
@@ -44,6 +47,7 @@ public sealed class UploadBlobTests : IClassFixture<WebApplicationFactory<Progra
             FileName = "testfile.txt"
         };
         byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
+
         fileContent.Add(byteArrayContent, "formFile", "testfile.txt");
 
         // Act
