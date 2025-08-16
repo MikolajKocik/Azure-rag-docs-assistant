@@ -5,6 +5,12 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using AiKnowledgeAssistant.Services.Azure.BlobStorage;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.Extensibility;
+using Azure.AI.OpenAI;
+using Moq;
 
 namespace AIAssistantTests.Endpoints;
 
@@ -18,14 +24,25 @@ public sealed class UploadBlobTests : IClassFixture<WebApplicationFactory<Progra
         {
             builder.ConfigureServices(services =>
             {
-                var descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(IBlobStorageService));
-
-                if (descriptor != null)
+                // Telemetry InMemory config 
+                services.RemoveAll<TelemetryClient>();
+                services.RemoveAll<ITelemetryChannel>();
+                services.AddSingleton(provider =>
                 {
-                    services.Remove(descriptor);
-                }
+                    var config = TelemetryConfiguration.CreateDefault();
+                    var inMemoryChannel = new InMemoryChannel();
+                    config.TelemetryChannel = inMemoryChannel;
+                    config.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
+                    return new TelemetryClient(config);
+                });
 
+                // AzureOpenAI mock
+                services.RemoveAll<AzureOpenAIClient>();
+                var mockAzureOpenAICient = new Mock<AzureOpenAIClient>();
+                services.AddSingleton(mockAzureOpenAICient.Object);
+
+                // removes original IBlobStorageService to add InMemory for testing
+                services.RemoveAll<IBlobStorageService>();
                 services.AddSingleton<IBlobStorageService, InMemoryBlobStorageService>();
             });
         });
@@ -34,20 +51,18 @@ public sealed class UploadBlobTests : IClassFixture<WebApplicationFactory<Progra
     }
 
     [Fact]
-    public async Task Should_Return_File_After_Upload()
+    public async Task Should_Return_Ok_After_File_Uploaded()
     {
         // Arrange
-        var fileBytes = Encoding.UTF8.GetBytes("Test file content");
         var fileContent = new MultipartFormDataContent();
 
-        var byteArrayContent = new ByteArrayContent(fileBytes);
+        var byteArrayContent = new ByteArrayContent(Encoding.UTF8.GetBytes("Test file content"));
         byteArrayContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
         {
             Name = "formFile",
             FileName = "testfile.txt"
         };
         byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
-
         fileContent.Add(byteArrayContent, "formFile", "testfile.txt");
 
         // Act
@@ -58,6 +73,22 @@ public sealed class UploadBlobTests : IClassFixture<WebApplicationFactory<Progra
 
         var responseContent = await response.Content.ReadAsStringAsync();
         responseContent.Should().Be("File uploaded successfully");
+    }
+
+    [Fact]
+    public async Task Should_Return_BadRequest_After_No_File_Provided()
+    {
+        // Arrange
+        var emptyFileContent = new MultipartFormDataContent();
+
+        // Act
+        var response = await _client.PostAsync("/upload", emptyFileContent);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+        responseContent.Should().Contain("No file uploaded");
     }
 
     private sealed class InMemoryBlobStorageService : IBlobStorageService

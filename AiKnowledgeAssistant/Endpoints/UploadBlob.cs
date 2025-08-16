@@ -1,5 +1,6 @@
 ﻿using AiKnowledgeAssistant.Services.Azure.BlobStorage;
 using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System.Diagnostics;
 
 namespace AiKnowledgeAssistant.Endpoints;
@@ -8,7 +9,7 @@ public static class UploadBlob
 {
     public static void MapUploadBlobEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/upload", async (
+        app.MapPost("/upload", async Task<Results<Ok<string>, BadRequest<string>, ProblemHttpResult>> (
             IFormFile? formFile,
             IBlobStorageService blobService,
             TelemetryClient telemetryClient) =>
@@ -30,7 +31,7 @@ public static class UploadBlob
                        StatusCodes.Status400BadRequest.ToString(),
                        false);
 
-                    return Results.BadRequest("No file uploaded");
+                    return TypedResults.BadRequest("No file uploaded");
                 }
 
                 using var stream = formFile.OpenReadStream();
@@ -45,7 +46,7 @@ public static class UploadBlob
                     StatusCodes.Status200OK.ToString(),
                     true);
 
-                return Results.Ok("File uploaded successfully");
+                return TypedResults.Ok("File uploaded successfully");
             }
             catch (Exception ex)
             {
@@ -56,7 +57,12 @@ public static class UploadBlob
                     ["ExceptionTarget"] = ex.TargetSite?.Name?.ToString()!
                 };
                 telemetryClient.TrackException(ex, exError.AsReadOnly());
-                throw;
+
+                return TypedResults.Problem(
+                    detail: $"Error ocurred while uploading a file: {ex.Message}",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    title: "Internal error"
+                    );
             }
         })
         .WithName("UploadFile")
