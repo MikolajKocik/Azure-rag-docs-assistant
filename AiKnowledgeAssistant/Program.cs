@@ -9,7 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Azure Resources
 AzureKeyVault.ConfigureKeyVault(builder);
 ApplicationInsightsService.ConfigureAppInsights(builder);
-BlobStorageServiceExtension.SetBlobStorage(builder.Services);
+
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    BlobStorageServiceExtension.SetBlobStorage(builder.Services);
+}
 
 // OpenAI Models
 GPT_4_Model.ConfigureChatGPT4(builder);
@@ -19,6 +23,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseRouting();
+app.UseStaticFiles();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

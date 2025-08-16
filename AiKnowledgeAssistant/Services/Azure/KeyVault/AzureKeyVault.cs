@@ -10,9 +10,8 @@ public static class AzureKeyVault
         string? kvUri = builder.Configuration["KEYVAULT_URI"]
             ?? throw new ArgumentNullException("KEYVAULT_URI not found", nameof(kvUri));
 
-        builder.Services.AddSingleton(
-            new SecretClient(
-            new Uri(kvUri),
-            new DefaultAzureCredential()));
+        var secretClient = new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
+        builder.Services.AddSingleton(secretClient);
+        builder.Services.AddSingleton<ISecretProvider>(new KeyVaultSecretProvider(secretClient));
     }
 }

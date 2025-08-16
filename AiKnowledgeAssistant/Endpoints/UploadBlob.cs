@@ -1,6 +1,7 @@
 ﻿using AiKnowledgeAssistant.Services.Azure.BlobStorage;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
 namespace AiKnowledgeAssistant.Endpoints;
@@ -10,7 +11,7 @@ public static class UploadBlob
     public static void MapUploadBlobEndpoint(this IEndpointRouteBuilder app)
     {
         app.MapPost("/upload", async Task<Results<Ok<string>, BadRequest<string>, ProblemHttpResult>> (
-            IFormFile? formFile,
+            [FromForm] IFormFile? formFile,
             IBlobStorageService blobService,
             TelemetryClient telemetryClient) =>
         {
@@ -71,6 +72,7 @@ public static class UploadBlob
         .Produces<string>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status500InternalServerError)
+        .DisableAntiforgery()
         .WithOpenApi();
     }
 }

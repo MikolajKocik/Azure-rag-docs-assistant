@@ -1,4 +1,4 @@
-﻿using Azure.Security.KeyVault.Secrets;
+﻿using AiKnowledgeAssistant.Services.Azure.KeyVault;
 using Azure.Storage.Blobs;
 
 namespace AiKnowledgeAssistant.Services.Azure.BlobStorage;
@@ -6,20 +6,19 @@ namespace AiKnowledgeAssistant.Services.Azure.BlobStorage;
 public sealed class BlobStorageService : IBlobStorageService
 {
     private BlobContainerClient? _containerClient;
-    private readonly SecretClient _secretClient;
+    private readonly ISecretProvider _secretProvider;
 
-    public BlobStorageService(SecretClient secretClient)
+    public BlobStorageService(ISecretProvider secretProvider)
     {
-        _secretClient = secretClient;
+        _secretProvider = secretProvider;
     }
 
     public async Task InitializeAsync()
     {
-        var connectionString = (await _secretClient.GetSecretAsync("Azure--StorageConnectionString"))
-            .Value.Value;
-
-        var containerName = (await _secretClient.GetSecretAsync("Azure--BlobContainerName"))
-            .Value.Value;
+        var connectionString = await _secretProvider.GetSecretValueAsync("Azure--StorageConnectionString")
+            ?? throw new InvalidOperationException("Missing secret: Azure--StorageConnectionString");
+        var containerName = await _secretProvider.GetSecretValueAsync("Azure--BlobContainerName")
+            ?? throw new InvalidOperationException("Missing secret: Azure--BlobContainerName");
 
         _containerClient = new BlobContainerClient(connectionString, containerName);
     }

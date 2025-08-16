@@ -1,5 +1,4 @@
-﻿using DotNetEnv;
-using Microsoft.ApplicationInsights.Extensibility;
+﻿using Microsoft.ApplicationInsights.Extensibility;
 
 namespace AiKnowledgeAssistant.Services.Azure.AppInsights
 {

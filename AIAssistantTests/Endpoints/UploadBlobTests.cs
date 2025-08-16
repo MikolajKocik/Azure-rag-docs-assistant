@@ -4,13 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
-using AiKnowledgeAssistant.Services.Azure.BlobStorage;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Azure.AI.OpenAI;
 using Moq;
+using AiKnowledgeAssistant.Services.Azure.BlobStorage;
 
 namespace AIAssistantTests.Endpoints;
 
@@ -41,7 +41,6 @@ public sealed class UploadBlobTests : IClassFixture<WebApplicationFactory<Progra
                 var mockAzureOpenAICient = new Mock<AzureOpenAIClient>();
                 services.AddSingleton(mockAzureOpenAICient.Object);
 
-                // removes original IBlobStorageService to add InMemory for testing
                 services.RemoveAll<IBlobStorageService>();
                 services.AddSingleton<IBlobStorageService, InMemoryBlobStorageService>();
             });
@@ -72,7 +71,9 @@ public sealed class UploadBlobTests : IClassFixture<WebApplicationFactory<Progra
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var responseContent = await response.Content.ReadAsStringAsync();
-        responseContent.Should().Be("File uploaded successfully");
+        Console.WriteLine(responseContent);
+        // JSON string bcs of TypedResults usage in blob endpoint
+        responseContent.Should().Be("\"File uploaded successfully\"");
     }
 
     [Fact]
@@ -88,6 +89,7 @@ public sealed class UploadBlobTests : IClassFixture<WebApplicationFactory<Progra
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var responseContent = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(responseContent);
         responseContent.Should().Contain("No file uploaded");
     }
 
