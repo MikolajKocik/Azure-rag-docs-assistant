@@ -11,8 +11,8 @@ public static class UploadBlob
     public static void MapUploadBlobEndpoint(this IEndpointRouteBuilder app)
     {
         app.MapPost("/upload", async Task<Results<Ok<string>, BadRequest<string>, ProblemHttpResult>> (
-            [FromForm] IFormFile? formFile,
             IBlobStorageService blobService,
+            HttpRequest request,
             TelemetryClient telemetryClient) =>
         {
             try
@@ -20,6 +20,23 @@ public static class UploadBlob
                 DateTime start = DateTime.UtcNow;
                 var sw = new Stopwatch();
                 sw.Start();
+
+                if (!request.HasFormContentType)
+                {
+                    sw.Stop();
+
+                    telemetryClient.TrackRequest(
+                        name: "Upload Blob failure, no form provided",
+                        startTime: start,
+                        duration: TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds),
+                        StatusCodes.Status400BadRequest.ToString(),
+                        false);
+
+                    return TypedResults.BadRequest("No form content");
+                }
+
+                var form = await request.ReadFormAsync();
+                var formFile = form.Files.FirstOrDefault();
 
                 if (formFile is null || formFile.Length == 0)
                 {
@@ -33,7 +50,7 @@ public static class UploadBlob
                        false);
 
                     return TypedResults.BadRequest("No file uploaded");
-                }
+                }                
 
                 using var stream = formFile.OpenReadStream();
                 await blobService.UploadAsync(formFile.FileName, stream);
