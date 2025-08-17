@@ -2,6 +2,7 @@ using AiKnowledgeAssistant.Endpoints;
 using AiKnowledgeAssistant.Extensions;
 using AiKnowledgeAssistant.Services.Azure.AppInsights;
 using AiKnowledgeAssistant.Services.Azure.KeyVault;
+using AiKnowledgeAssistant.Services.AzureOpenAI.FormRecognizer;
 using AiKnowledgeAssistant.Services.AzureOpenAI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,8 @@ if (!builder.Environment.IsEnvironment("Testing"))
 // OpenAI Models
 GPT_4_Model.ConfigureChatGPT4(builder);
 TextEmbeddingServiceExtension.SetTextEmbeddingModel(builder.Services);
+
+builder.Services.AddSingleton<FormRecognizerService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -40,6 +43,7 @@ else
 
 UploadBlob.MapUploadBlobEndpoint(app);
 HealthCheck.MapHealthCheckEndpoint(app);
+ProcessDocument.MapFormRecognizerEndpoint(app);
 
 await app.RunAsync();
 
