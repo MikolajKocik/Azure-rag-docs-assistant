@@ -4,7 +4,7 @@ using DotNetEnv;
 using OpenAI;
 using OpenAI.Embeddings;
 
-namespace AiKnowledgeAssistant.Services.AzureOpenAI.Models;
+namespace AiKnowledgeAssistant.Services.AzureOpenAI.Models.Embedding;
 
 public sealed class TextEmbeddingService
 {

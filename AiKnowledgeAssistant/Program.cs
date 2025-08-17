@@ -3,7 +3,7 @@ using AiKnowledgeAssistant.Extensions;
 using AiKnowledgeAssistant.Services.Azure.AppInsights;
 using AiKnowledgeAssistant.Services.Azure.KeyVault;
 using AiKnowledgeAssistant.Services.AzureOpenAI.FormRecognizer;
-using AiKnowledgeAssistant.Services.AzureOpenAI.Models;
+using AiKnowledgeAssistant.Services.AzureOpenAI.Models.GPT;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +16,8 @@ if (!builder.Environment.IsEnvironment("Testing"))
     BlobStorageServiceExtension.SetBlobStorage(builder.Services);
 }
 
-// OpenAI Models
-GPT_4_Model.ConfigureChatGPT4(builder);
+// OpenAI models
+builder.Services.AddSingleton<IChatService, GPT_4_Model>();
 TextEmbeddingServiceExtension.SetTextEmbeddingModel(builder.Services);
 
 builder.Services.AddSingleton<FormRecognizerService>();

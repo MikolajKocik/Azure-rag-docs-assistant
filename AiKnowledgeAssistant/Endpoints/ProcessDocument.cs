@@ -1,7 +1,7 @@
 ﻿using AiKnowledgeAssistant.Services.Azure.BlobStorage;
 using AiKnowledgeAssistant.Services.Azure.KeyVault;
 using AiKnowledgeAssistant.Services.AzureOpenAI.FormRecognizer;
-using AiKnowledgeAssistant.Services.AzureOpenAI.Models;
+using AiKnowledgeAssistant.Services.AzureOpenAI.Models.Embedding;
 using AiKnowledgeAssistant.Utils;
 using Azure;
 using Azure.Search.Documents;

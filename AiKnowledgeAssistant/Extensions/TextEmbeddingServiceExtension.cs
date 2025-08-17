@@ -1,4 +1,4 @@
-﻿using AiKnowledgeAssistant.Services.AzureOpenAI.Models;
+﻿using AiKnowledgeAssistant.Services.AzureOpenAI.Models.Embedding;
 
 namespace AiKnowledgeAssistant.Extensions
 {
