@@ -6,7 +6,7 @@ namespace AiKnowledgeAssistant.Extensions
     {
         public static void ConfigureAppFunction(this WebApplicationBuilder builder)
         {
-            builder.Services.AddTransient<IApplicationFunctionService, ApplicationFunctionService>();
+            builder.Services.AddSingleton<IApplicationFunctionService, ApplicationFunctionService>();
         }
     }
 }
