@@ -1,4 +1,5 @@
-﻿using AiKnowledgeAssistant.Services.Azure.BlobStorage;
+﻿using AiKnowledgeAssistant.Services.Azure.AppFunction;
+using AiKnowledgeAssistant.Services.Azure.BlobStorage;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,9 @@ public static class UploadBlob
         app.MapPost("/upload", async Task<Results<Ok<string>, BadRequest<string>, ProblemHttpResult>> (
             IBlobStorageService blobService,
             HttpRequest request,
-            TelemetryClient telemetryClient) =>
+            TelemetryClient telemetryClient,
+            IApplicationFunctionService appFunctionService
+            ) =>
         {
             try
             {

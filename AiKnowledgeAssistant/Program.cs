@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Azure Resources
 AzureKeyVault.ConfigureKeyVault(builder);
 ApplicationInsightsService.ConfigureAppInsights(builder);
+builder.ConfigureAppFunction();
 
 if (!builder.Environment.IsEnvironment("Testing"))
 {
