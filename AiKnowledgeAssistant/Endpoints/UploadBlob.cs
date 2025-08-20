@@ -53,7 +53,14 @@ public static class UploadBlob
                        false);
 
                     return TypedResults.BadRequest("No file uploaded");
-                }                
+                }
+
+                var allowedTypes = new[] { "application/pdf", "image/png" };
+
+                if (!allowedTypes.Contains(formFile.ContentType))
+                {
+                    return TypedResults.BadRequest("Unsupported file type");
+                }
 
                 using var stream = formFile.OpenReadStream();
                 await blobService.UploadAsync(formFile.FileName, stream);
