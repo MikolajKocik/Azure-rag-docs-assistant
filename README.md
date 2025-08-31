@@ -5,6 +5,8 @@ RAG-based AI web API for business document analysis on Azure. It ingests documen
 - Tech: ASP.NET Core Minimal API, Azure Key Vault, Blob Storage, Application Insights, Cognitive Search (vector search), Document Intelligence, Azure OpenAI (Embeddings + GPT).
 - Storage and secrets: All sensitive values are pulled from Azure Key Vault via DefaultAzureCredential.
 
+![main](docs/readme-photo.png)
+
 ## Table of Contents
 - Features
 - Architecture
