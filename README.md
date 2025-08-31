@@ -223,6 +223,3 @@ curl -X POST "http://localhost:5135/sendToFunction" \
 - All secrets are resolved at runtime from Key Vault; ensure identities and RBAC are correctly configured.
 - Embedding dimensionality must match your index configuration.
 - Swagger UI is enabled only in the Development environment.
-
-## License
-This project is provided as-is. See repository license file if present.
