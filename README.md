@@ -17,7 +17,6 @@ RAG-based AI web API for business document analysis on Azure. It ingests documen
 - [Azure setup checklist](#azure-setup-checklist)
 - [Telemetry](#telemetry)
 - [Limitations / Notes](#limitations--notes)
-- [License](#license)
 
 ## Features
 - File upload to Azure Blob Storage (PDF, PNG).
