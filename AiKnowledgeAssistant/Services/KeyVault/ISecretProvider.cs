@@ -1,4 +1,4 @@
-﻿namespace AiKnowledgeAssistant.Services.Azure.KeyVault;
+﻿namespace AiKnowledgeAssistant.Services.KeyVault;
 
 public interface ISecretProvider
 {

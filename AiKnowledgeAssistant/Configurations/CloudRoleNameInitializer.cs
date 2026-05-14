@@ -1,7 +1,7 @@
-﻿using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 
-namespace AiKnowledgeAssistant.Services.Azure.AppInsights
+namespace AiKnowledgeAssistant.Configurations
 {
     public sealed class CloudRoleNameInitializer : ITelemetryInitializer
     {

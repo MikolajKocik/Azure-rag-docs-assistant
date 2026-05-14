@@ -1,7 +1,6 @@
 ﻿using Azure.Security.KeyVault.Secrets;
-using AiKnowledgeAssistant.Services.Azure.BlobStorage;
 
-namespace AiKnowledgeAssistant.Services.Azure.KeyVault;
+namespace AiKnowledgeAssistant.Services.KeyVault;
 
 internal sealed class KeyVaultSecretProvider : ISecretProvider
 {
