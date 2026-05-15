@@ -12,9 +12,10 @@ public sealed class ChatService : IChatService
 {
     private readonly ChatClient _chatClient;
     private readonly ITextEmbeddingService _embeddingService;
+    private readonly ILocalRankerService _rerankerService;
     private readonly ISecretProvider _secretClient;
 
-    public ChatService(IConfiguration config, ITextEmbeddingService embeddingService, ISecretProvider secretClient)
+    public ChatService(IConfiguration config, ITextEmbeddingService embeddingService, ILocalRankerService rerankerService, ISecretProvider secretClient)
     {
         var endpoint = new Uri(config["AZURE_OPENAI_ENDPOINT"]
           ?? throw new ArgumentException("Azure OpenAI endpoint not found"));
@@ -27,6 +28,7 @@ public sealed class ChatService : IChatService
         _chatClient = azureClient.GetChatClient(deploymentName);
 
         _embeddingService = embeddingService;
+        _rerankerService = rerankerService;
         _secretClient = secretClient;
     }
 
@@ -61,22 +63,30 @@ public sealed class ChatService : IChatService
                 {
                     new VectorizedQuery(questionEmbedding)
                     {
-                        KNearestNeighborsCount = 3,
+                        KNearestNeighborsCount = 50,
                         Fields = { "embedding" }
                     }
                 }
-            }
+            } 
         };
-
+        
         Response<SearchResults<SearchDocument>> searchResponse = 
             await searchClient.SearchAsync<SearchDocument>(null, options, cancellationToken);
-            
-        return string.Join(
-            "\n---\n", 
-            searchResponse.Value
-                .GetResults()
-                .Select(r => r.Document["content"].ToString())
-        );
+
+        var scoredResults = new List<(string Content, float Score)>();
+        foreach (var result in searchResponse.Value.GetResults())
+        {
+            string content = result.Document["content"].ToString()!;
+            float score = _rerankerService.CalculateScore(document, content);
+            scoredResults.Add((content, score));
+        }
+
+        var top3Documents = scoredResults
+            .OrderByDescending(x => x.Score)
+            .Take(3)
+            .Select(x => x.Content);
+          
+        return string.Join("\n---\n", top3Documents);
     }
 
     /// <summary>
