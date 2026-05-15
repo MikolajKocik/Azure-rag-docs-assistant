@@ -25,7 +25,6 @@ namespace AiKnowledgeAssistant.Extensions
             {
                 var secretProvider = provider.GetRequiredService<ISecretProvider>();
                 var blobService = new BlobStorageService(secretProvider);
-                blobService.InitializeAsync().GetAwaiter().GetResult();
                 return blobService;
             });
         }
@@ -33,7 +32,7 @@ namespace AiKnowledgeAssistant.Extensions
         private static void SetOpenAIServices(this IServiceCollection services)
         {
             services.AddSingleton<ITextEmbeddingService, TextEmbeddingService>();
-            services.AddSingleton<IFormRecognizerService, FormRecognizerService>();
+            services.AddSingleton<IIngestionService, IngestionService>();
             services.AddSingleton<IChatService, ChatService>();
         }
 
