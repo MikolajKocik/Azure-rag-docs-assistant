@@ -3,6 +3,24 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform variables with secrets/local config
+*.tfvars
+*.tfvars.json
+
+# Terraform lock file?
+# .terraform.lock.hcl
+
 # AI Models and Tokenizers
 *.onnx
 *tokenizer.json

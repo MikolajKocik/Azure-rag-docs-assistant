@@ -1,0 +1,10 @@
+project_name = "aika"
+environment  = "dev"
+location     = "polandcentral"
+
+document_intelligence_location = "swedencentral"
+
+tags = {
+  project     = "ai-knowledge-assistant"
+  environment = "dev"
+}
