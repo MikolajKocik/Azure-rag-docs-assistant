@@ -56,10 +56,10 @@ namespace AiKnowledgeAssistant.Extensions
                 {
                     var modelPath = cfg["Ranker:ModelPath"]
                         ?? throw new InvalidOperationException("Ranker model path not found.");
-                    var tokenizerPath = cfg["Ranker:TokenizerPath"]
-                        ?? throw new InvalidOperationException("Ranker tokenizer path not found.");
+                    var sentencePieceModelPath = cfg["Ranker:SentencePieceModelPath"]
+                        ?? throw new InvalidOperationException("Ranker SentencePiece path not found.");
 
-                    return new LocalRankerService(modelPath, tokenizerPath);
+                    return new LocalRankerService(modelPath, sentencePieceModelPath);
                 });
             }
             else if (rankerType == "none")

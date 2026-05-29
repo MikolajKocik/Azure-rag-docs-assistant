@@ -8,14 +8,19 @@ namespace AiKnowledgeAssistant.Services.OpenAI.Ranker;
 public sealed class LocalRankerService : IChunkRanker, IDisposable
 {
     private readonly InferenceSession _session;
-    private readonly Tokenizer _tokenizer;
+    private readonly SentencePieceTokenizer _tokenizer;
 
-    public LocalRankerService(string modelPath, string tokenizerPath)
+    public LocalRankerService(string modelPath, string sentencePieceModelPath)
     {
         _session = new InferenceSession(modelPath);
 
-        var bpeOptions = new BpeOptions(tokenizerPath);
-        _tokenizer = BpeTokenizer.Create(bpeOptions);
+        using var stream = File.OpenRead(sentencePieceModelPath);
+        
+        _tokenizer = SentencePieceTokenizer.Create(
+            stream,
+            addBeginningOfSentence: false,
+            addEndOfSentence: false
+        );
     }
     
     private float CalculateScore(string query, string document)
@@ -32,6 +37,13 @@ public sealed class LocalRankerService : IChunkRanker, IDisposable
         inputIdsList.AddRange(docTokens);
         inputIdsList.Add(2);
 
+        const int MaxSequenceLength = 512;
+
+        if (inputIdsList.Count > MaxSequenceLength)
+        {
+            inputIdsList = inputIdsList.Take(MaxSequenceLength).ToList();
+        }
+        
         int sequenceLength = inputIdsList.Count;
 
         // Tensors

@@ -1,18 +1,72 @@
+$ErrorActionPreference = "Stop"
+
 $modelsDir = Join-Path -Path $PSScriptRoot -ChildPath "Models"
 
-if (-Not (Test-Path -Path $modelsDir)) {
+if (-not (Test-Path -Path $modelsDir)) {
     New-Item -ItemType Directory -Path $modelsDir | Out-Null
-    Write-Host "Utworzono folder: $modelsDir" -ForegroundColor Green
+    Write-Host "Created folder: $modelsDir" -ForegroundColor Green
 }
 
-Write-Host "Pobieranie pliku model.onnx (to może zająć chwilę, waży kilkaset MB)..." -ForegroundColor Cyan
-$modelUrl = "https://huggingface.co/BAAI/bge-reranker-base/resolve/main/onnx/model.onnx?download=true"
-$modelOutPath = Join-Path -Path $modelsDir -ChildPath "model.onnx"
-Invoke-WebRequest -Uri $modelUrl -OutFile $modelOutPath
+$baseUrl = "https://huggingface.co/BAAI/bge-reranker-base/resolve/main"
 
-Write-Host "Pobieranie pliku tokenizer.json..." -ForegroundColor Cyan
-$tokenizerUrl = "https://huggingface.co/BAAI/bge-reranker-base/resolve/main/tokenizer.json?download=true"
-$tokenizerOutPath = Join-Path -Path $modelsDir -ChildPath "tokenizer.json"
-Invoke-WebRequest -Uri $tokenizerUrl -OutFile $tokenizerOutPath
+$files = @(
+    @{
+        Name = "model.onnx"
+        Url  = "$baseUrl/onnx/model.onnx?download=true"
+    },
+    @{
+        Name = "sentencepiece.bpe.model"
+        Url  = "$baseUrl/sentencepiece.bpe.model?download=true"
+    },
+    @{
+        Name = "tokenizer.json"
+        Url  = "$baseUrl/tokenizer.json?download=true"
+    },
+    @{
+        Name = "tokenizer_config.json"
+        Url  = "$baseUrl/tokenizer_config.json?download=true"
+    },
+    @{
+        Name = "special_tokens_map.json"
+        Url  = "$baseUrl/special_tokens_map.json?download=true"
+    },
+    @{
+        Name = "config.json"
+        Url  = "$baseUrl/config.json?download=true"
+    }
+)
 
-Write-Host "Gotowe! Wszystkie pliki zostały pobrane do folderu Models." -ForegroundColor Green
+foreach ($file in $files) {
+    $outPath = Join-Path -Path $modelsDir -ChildPath $file.Name
+
+    if (Test-Path -Path $outPath) {
+        Write-Host "Skipping existing file: $($file.Name)" -ForegroundColor Yellow
+        continue
+    }
+
+    Write-Host "Downloading $($file.Name)..." -ForegroundColor Cyan
+
+    $tempPath = "$outPath.tmp"
+
+    try {
+        Invoke-WebRequest `
+            -Uri $file.Url `
+            -OutFile $tempPath `
+            -UseBasicParsing
+
+        Move-Item -Path $tempPath -Destination $outPath -Force
+
+        Write-Host "Downloaded: $($file.Name)" -ForegroundColor Green
+    }
+    catch {
+        if (Test-Path -Path $tempPath) {
+            Remove-Item -Path $tempPath -Force
+        }
+
+        Write-Host "Failed to download: $($file.Name)" -ForegroundColor Red
+        throw
+    }
+}
+
+Write-Host ""
+Write-Host "Done. Files are available in: $modelsDir" -ForegroundColor Green
