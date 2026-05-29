@@ -7,12 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 30 * 1024 * 1024; // 30 MB
+    options.MultipartBodyLengthLimit = 30 * 1024 * 1024; 
 });
 
 ModelConfig.ConfigureModelONNX();
+await builder.ConfigureServicesAsync();
 builder.Services.ConfigureReRanker();
-builder.ConfigureServices();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
