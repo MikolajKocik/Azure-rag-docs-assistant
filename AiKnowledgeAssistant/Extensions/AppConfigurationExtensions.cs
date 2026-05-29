@@ -6,6 +6,7 @@ using AiKnowledgeAssistant.Services.OpenAI.ChatGeneral.Common;
 using AiKnowledgeAssistant.Services.OpenAI.DataIngestion;
 using AiKnowledgeAssistant.Services.OpenAI.DataIngestion.Common;
 using AiKnowledgeAssistant.Services.OpenAI.Ranker;
+using Azure.AI.FormRecognizer.DocumentAnalysis;
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.Identity;
@@ -13,6 +14,7 @@ using Azure.Search.Documents;
 using Azure.Security.KeyVault.Secrets;
 using Azure.Storage.Blobs;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights;
 
 namespace AiKnowledgeAssistant.Extensions
 {
@@ -28,6 +30,9 @@ namespace AiKnowledgeAssistant.Extensions
             await ConfigureAzureClientsAsync(services, cfg, secretClient);
 
             ConfigureAppInsights(builder);
+
+            services.AddSingleton<IBlobStorageService, BlobStorageService>();
+
             SetOpenAIServices(builder.Services, builder.Configuration);
         }
 
@@ -83,30 +88,51 @@ namespace AiKnowledgeAssistant.Extensions
 
         private static void ConfigureAppInsights(this WebApplicationBuilder builder)
         {
-            string? appConn = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]; 
+            string? appConn = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+            if (string.IsNullOrWhiteSpace(appConn))
+            {
+                builder.Services.AddSingleton(new TelemetryClient(new TelemetryConfiguration()));
+                return;
+            }
 
             builder.Logging.AddApplicationInsights(
-                configureTelemetryConfiguration: (cfg) =>
-            {
-                cfg.ConnectionString = appConn;
-            }, 
-            configureApplicationInsightsLoggerOptions: (options) => { }
+                configureTelemetryConfiguration: cfg =>
+                {
+                    cfg.ConnectionString = appConn;
+                },
+                configureApplicationInsightsLoggerOptions: options => { }
             );
 
             builder.Services.Configure<TelemetryConfiguration>(cfg =>
             {
+                cfg.ConnectionString = appConn;
                 cfg.TelemetryInitializers.Add(
                     new CloudRoleNameInitializer(
                         "AI Knowledge Assistant API",
                         Environment.MachineName));
             });
+
+            builder.Services.AddSingleton(sp =>
+                new TelemetryClient(sp.GetRequiredService<TelemetryConfiguration>()));
         }
         
         private static async Task ConfigureAzureClientsAsync(
-        IServiceCollection services,
-        IConfiguration cfg,
-        SecretClient secretClient)
+            IServiceCollection services,
+            IConfiguration cfg,
+            SecretClient secretClient
+            )
         {
+            string formRecognizerEndpoint = (await secretClient.GetSecretAsync("Azure--Form-Recognizer-Endpoint"))
+                .Value.Value;
+
+            string formRecognizerKey = (await secretClient.GetSecretAsync("Azure--Form-Recognizer-Key"))
+                .Value.Value;
+
+            services.AddSingleton(new DocumentAnalysisClient(
+                new Uri(formRecognizerEndpoint),
+                new AzureKeyCredential(formRecognizerKey)));
+
             string searchEndpoint = (await secretClient.GetSecretAsync("Azure--search-endpoint"))
                 .Value.Value;
 
