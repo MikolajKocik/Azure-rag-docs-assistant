@@ -1,5 +1,4 @@
 ﻿using AiKnowledgeAssistant.Services.BlobStorage;
-using AiKnowledgeAssistant.Services.KeyVault;
 using AiKnowledgeAssistant.Services.OpenAI.ChatEmbeddings;
 using AiKnowledgeAssistant.Services.OpenAI.DataIngestion.Common;
 using Azure;
@@ -15,7 +14,6 @@ namespace AiKnowledgeAssistant.Services.OpenAI.DataIngestion;
 public sealed class IngestionService(
     DocumentAnalysisClient analysisClient,
     SearchClient searchClient,
-    ISecretProvider secretProvider,
     IBlobStorageService blobService,
     ITextEmbeddingService embeddingService,
     IOptions<IngestionOptions> options) : IIngestionService
@@ -24,7 +22,6 @@ public sealed class IngestionService(
     private readonly SearchClient _searchClient = searchClient;
     private readonly IngestionOptions _options = options.Value;
 
-    private readonly ISecretProvider _secretProvider = secretProvider;
     private readonly IBlobStorageService _blobService = blobService;
     private readonly ITextEmbeddingService _embeddingService = embeddingService;
     
