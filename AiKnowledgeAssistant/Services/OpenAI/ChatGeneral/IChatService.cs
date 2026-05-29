@@ -1,4 +1,4 @@
-﻿namespace AiKnowledgeAssistant.Services.OpenAI;
+﻿namespace AiKnowledgeAssistant.Services.OpenAI.ChatGeneral;
 
 public interface IChatService
 {

@@ -1,35 +1,43 @@
 ﻿using System.ClientModel;
-using AiKnowledgeAssistant.Services.KeyVault;
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using OpenAI.Chat;
+using AiKnowledgeAssistant.Services.OpenAI.Ranker;
+using AiKnowledgeAssistant.Services.OpenAI.Ranker.Common;
+using AiKnowledgeAssistant.Services.OpenAI.ChatEmbeddings;
+using Microsoft.Extensions.Options;
+using AiKnowledgeAssistant.Services.OpenAI.ChatGeneral.Common;
 
-namespace AiKnowledgeAssistant.Services.OpenAI;
+namespace AiKnowledgeAssistant.Services.OpenAI.ChatGeneral;
 
 public sealed class ChatService : IChatService
 {
     private readonly ChatClient _chatClient;
     private readonly ITextEmbeddingService _embeddingService;
-    private readonly ILocalRankerService _rerankerService;
-    private readonly ISecretProvider _secretClient;
+    private readonly IChunkRanker _chunkRanker;
+    private readonly SearchClient _searchClient;
+    private readonly int _finalTopK;
+    private readonly int _vectorTopK;
 
-    public ChatService(IConfiguration config, ITextEmbeddingService embeddingService, ILocalRankerService rerankerService, ISecretProvider secretClient)
+    public ChatService(
+        ITextEmbeddingService embeddingService,
+        IChunkRanker chunkRanker,
+        AzureOpenAIClient client,
+        SearchClient searchClient,
+        IOptions<RagOptions> ragOptions,
+        IOptions<AzureOpenAIOptions> azOptions
+        )
     {
-        var endpoint = new Uri(config["AZURE_OPENAI_ENDPOINT"]
-          ?? throw new ArgumentException("Azure OpenAI endpoint not found"));
+        _chatClient = client.GetChatClient(azOptions.Value.ChatDeploymentName);
 
-        string apiKey = config["AZURE_OPENAI_KEY"]
-             ?? throw new ArgumentException("Azure OpenAI api key not found");
-        string deploymentName = "gpt-4-chat";
-
-        var azureClient = new AzureOpenAIClient(endpoint, new AzureKeyCredential(apiKey));
-        _chatClient = azureClient.GetChatClient(deploymentName);
+        _vectorTopK = ragOptions.Value.VectorTopK;
+        _finalTopK = ragOptions.Value.FinalTopK;
 
         _embeddingService = embeddingService;
-        _rerankerService = rerankerService;
-        _secretClient = secretClient;
+        _chunkRanker = chunkRanker;
+        _searchClient = searchClient;
     }
 
     /// <summary>
@@ -38,21 +46,9 @@ public sealed class ChatService : IChatService
     /// <param name="request">The chat request containing the user's question.</param>
     /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
     /// <returns>A formatted string containing the concatenated content of the top matching documents.</returns>
-    public async Task<string> RetrieveDocumentAsync(string document, CancellationToken cancellationToken)
+    public async Task<string> RetrieveDocumentAsync(string question, CancellationToken cancellationToken)
     {   
-        float[] questionEmbedding = await _embeddingService.GetEmbeddingAsync(document, cancellationToken);
-
-        string? searchEndpoint = await _secretClient.GetSecretValueAsync("Azure--search-endpoint");
-        ArgumentException.ThrowIfNullOrEmpty(searchEndpoint, nameof(searchEndpoint));
-            
-        string? searchKey = await _secretClient.GetSecretValueAsync("Azure--search-key");           
-        ArgumentException.ThrowIfNullOrEmpty(searchKey, nameof(searchKey));
-
-        var searchClient = new SearchClient(
-            new Uri(searchEndpoint),
-            "documents-index",
-            new AzureKeyCredential(searchKey)
-        );
+        float[] questionEmbedding = await _embeddingService.GetEmbeddingAsync(question, cancellationToken);
 
         // Cognitive Search (vector search)
         var options = new SearchOptions
@@ -63,7 +59,7 @@ public sealed class ChatService : IChatService
                 {
                     new VectorizedQuery(questionEmbedding)
                     {
-                        KNearestNeighborsCount = 50,
+                        KNearestNeighborsCount = _vectorTopK,
                         Fields = { "embedding" }
                     }
                 }
@@ -71,19 +67,22 @@ public sealed class ChatService : IChatService
         };
         
         Response<SearchResults<SearchDocument>> searchResponse = 
-            await searchClient.SearchAsync<SearchDocument>(null, options, cancellationToken);
+            await _searchClient.SearchAsync<SearchDocument>(null, options, cancellationToken);
+        
+        List<string> chunks = searchResponse.Value
+            .GetResults()
+            .Select(result => result.Document["content"].ToString()!)
+            .Where(content => !string.IsNullOrWhiteSpace(content))
+            .ToList();
 
-        var scoredResults = new List<(string Content, float Score)>();
-        foreach (var result in searchResponse.Value.GetResults())
-        {
-            string content = result.Document["content"].ToString()!;
-            float score = _rerankerService.CalculateScore(document, content);
-            scoredResults.Add((content, score));
-        }
+        IReadOnlyList<RankedChunk> rankedChunks = await _chunkRanker.RankAsync(
+            question,
+            chunks,
+            cancellationToken
+        );
 
-        var top3Documents = scoredResults
-            .OrderByDescending(x => x.Score)
-            .Take(3)
+        IEnumerable<string> top3Documents = rankedChunks
+            .Take(_finalTopK)
             .Select(x => x.Content);
           
         return string.Join("\n---\n", top3Documents);
