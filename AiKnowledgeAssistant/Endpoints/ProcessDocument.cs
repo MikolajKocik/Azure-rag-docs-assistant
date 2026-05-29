@@ -1,6 +1,7 @@
 ﻿using AiKnowledgeAssistant.Services.OpenAI.DataIngestion;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AiKnowledgeAssistant.Endpoints
 {
@@ -9,23 +10,17 @@ namespace AiKnowledgeAssistant.Endpoints
         public static void MapFormRecognizerEndpoint(this IEndpointRouteBuilder app)
         {
             app.MapPost("/process", async Task<Results<Ok<object>, BadRequest<string>, ProblemHttpResult>> (
-                IFormCollection form,
-                IIngestionService recognizerService,
-                TelemetryClient telemetryClient,
+                [FromForm] IFormFile formFile,
+                [FromServices] IIngestionService recognizerService,
+                [FromServices] TelemetryClient telemetryClient,
                 CancellationToken cancellationToken
                 ) =>
             {
                 try
-                {   
-                    IFormFile? formFile = form.Files.FirstOrDefault();
-
-                    if (formFile is null)
+                {
+                    if (formFile.Length == 0)
                     {
-                        return TypedResults.Problem(
-                            detail: "File is empty",
-                            statusCode: StatusCodes.Status400BadRequest,
-                            title: "Bad request"
-                        );
+                        return TypedResults.BadRequest("File is empty");
                     }
 
                     string extractedText = await recognizerService.ProcessDocumentAsync(formFile, cancellationToken);
@@ -36,7 +31,6 @@ namespace AiKnowledgeAssistant.Endpoints
                         TextPreview = extractedText.Substring(0, Math.Min(200, extractedText.Length)) + "...",
                         Length = extractedText.Length
                     });
-                    
                 }
                 catch (Exception ex)
                 {
@@ -44,8 +38,9 @@ namespace AiKnowledgeAssistant.Endpoints
                     {
                         ["ExceptionMessage"] = ex.Message,
                         ["IsDataReadOnly"] = ex.Data.IsReadOnly.ToString(),
-                        ["ExceptionTarget"] = ex.TargetSite?.Name?.ToString()!
+                        ["ExceptionTarget"] = ex.TargetSite?.Name?.ToString() ?? string.Empty
                     };
+
                     telemetryClient.TrackException(ex, exError.AsReadOnly());
 
                     return TypedResults.Problem(
@@ -60,6 +55,7 @@ namespace AiKnowledgeAssistant.Endpoints
             .Accepts<IFormFile>("multipart/form-data")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
+            .DisableAntiforgery()
             .WithOpenApi();
         }
     }

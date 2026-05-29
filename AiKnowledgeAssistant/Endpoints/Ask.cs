@@ -1,5 +1,6 @@
 ﻿using AiKnowledgeAssistant.Requests;
 using AiKnowledgeAssistant.Services.OpenAI.ChatGeneral;
+using AiKnowledgeAssistant.Services.OpenAI.ChatGeneral.Common;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -12,14 +13,14 @@ namespace AiKnowledgeAssistant.Endpoints
         {
             app.MapPost("/ask", async Task<Results<Ok<object>, BadRequest<string>, ProblemHttpResult>> (
                 [FromBody] ChatRequest request,
-                IChatService chatService,
-                TelemetryClient telemetryClient,
+                [FromServices] IChatService chatService,
+                [FromServices] TelemetryClient telemetryClient,
                 CancellationToken cancellationToken) =>
             {
                 try
                 {
-                    string context = await chatService.RetrieveDocumentAsync(request.question, cancellationToken);
-                    if (string.IsNullOrWhiteSpace(context))
+                    RetrievalResult response = await chatService.RetrieveDocumentAsync(request.question, cancellationToken);
+                    if (response is null)
                     {
                         return TypedResults.Ok<object>(new { 
                             request.question, 
@@ -27,7 +28,7 @@ namespace AiKnowledgeAssistant.Endpoints
                         });
                     }
 
-                    string answer = await chatService.AskAsync(request.question, context, cancellationToken);          
+                    string answer = await chatService.AskAsync(request.question, response.Context, cancellationToken);          
 
                     telemetryClient.TrackEvent("QuestionAnswered", new Dictionary<string, string>
                     {
