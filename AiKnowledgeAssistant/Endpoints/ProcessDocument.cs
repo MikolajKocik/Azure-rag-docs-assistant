@@ -1,4 +1,4 @@
-﻿using AiKnowledgeAssistant.Services.OpenAI;
+﻿using AiKnowledgeAssistant.Services.OpenAI.DataIngestion;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -17,7 +17,7 @@ namespace AiKnowledgeAssistant.Endpoints
             {
                 try
                 {   
-                    IFormFile formFile = form.Files.FirstOrDefault();
+                    IFormFile? formFile = form.Files.FirstOrDefault();
 
                     if (formFile is null)
                     {
@@ -28,7 +28,6 @@ namespace AiKnowledgeAssistant.Endpoints
                         );
                     }
 
-                    await recognizerService.InitializeAsync(cancellationToken);
                     string extractedText = await recognizerService.ProcessDocumentAsync(formFile, cancellationToken);
 
                     return TypedResults.Ok<object>(new

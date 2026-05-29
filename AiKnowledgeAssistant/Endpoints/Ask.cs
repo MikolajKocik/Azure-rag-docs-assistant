@@ -1,5 +1,5 @@
 ﻿using AiKnowledgeAssistant.Requests;
-using AiKnowledgeAssistant.Services.OpenAI;
+using AiKnowledgeAssistant.Services.OpenAI.ChatGeneral;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
