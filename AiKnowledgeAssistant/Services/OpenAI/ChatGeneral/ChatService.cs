@@ -9,6 +9,7 @@ using AiKnowledgeAssistant.Services.OpenAI.Ranker.Common;
 using AiKnowledgeAssistant.Services.OpenAI.ChatEmbeddings;
 using Microsoft.Extensions.Options;
 using AiKnowledgeAssistant.Services.OpenAI.ChatGeneral.Common;
+using System.Diagnostics;
 
 namespace AiKnowledgeAssistant.Services.OpenAI.ChatGeneral;
 
@@ -46,8 +47,10 @@ public sealed class ChatService : IChatService
     /// <param name="request">The chat request containing the user's question.</param>
     /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
     /// <returns>A formatted string containing the concatenated content of the top matching documents.</returns>
-    public async Task<string> RetrieveDocumentAsync(string question, CancellationToken cancellationToken)
+    public async Task<RetrievalResult> RetrieveDocumentAsync(string question, CancellationToken cancellationToken)
     {   
+        var stopwatch = Stopwatch.StartNew();
+
         float[] questionEmbedding = await _embeddingService.GetEmbeddingAsync(question, cancellationToken);
 
         // Cognitive Search (vector search)
@@ -67,7 +70,11 @@ public sealed class ChatService : IChatService
         };
         
         Response<SearchResults<SearchDocument>> searchResponse = 
-            await _searchClient.SearchAsync<SearchDocument>(null, options, cancellationToken);
+            await _searchClient.SearchAsync<SearchDocument>(
+                null, 
+                options, 
+                cancellationToken
+            );
         
         List<string> chunks = searchResponse.Value
             .GetResults()
@@ -81,11 +88,25 @@ public sealed class ChatService : IChatService
             cancellationToken
         );
 
-        IEnumerable<string> top3Documents = rankedChunks
+        IReadOnlyList<RankedChunk> selectedChunks = rankedChunks
             .Take(_finalTopK)
-            .Select(x => x.Content);
+            .ToList();
           
-        return string.Join("\n---\n", top3Documents);
+        string context = string.Join(
+            "\n---\n", 
+            selectedChunks.Select(x => x.Content)
+        );
+
+        stopwatch.Stop();
+
+        return new RetrievalResult(
+            context,
+            rankedChunks,
+            selectedChunks,
+            _vectorTopK,
+            _finalTopK,
+            stopwatch.ElapsedMilliseconds
+        );
     }
 
     /// <summary>
