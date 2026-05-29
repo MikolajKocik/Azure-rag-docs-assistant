@@ -62,7 +62,19 @@ public sealed class IngestionService(
             await _blobService.UploadAsync(form.FileName, stream, cancellationToken);
 
             stream.Position = 0;
-            string extractedText = await ExtractTextAsync(stream, cancellationToken);
+            string extractedText;
+            
+            string extension = Path.GetExtension(form.FileName).ToLowerInvariant();
+
+            if (extension is ".md" or ".txt")
+            {
+                using var reader = new StreamReader(stream, leaveOpen: true);
+                extractedText = await reader.ReadToEndAsync(cancellationToken);
+            }
+            else
+            {
+                extractedText = await ExtractTextAsync(stream, cancellationToken);
+            }
 
             List<string> lines = TextChunker.SplitPlainTextLines(
                 extractedText, 
