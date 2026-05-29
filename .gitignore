@@ -22,8 +22,13 @@ override.tf.json
 # .terraform.lock.hcl
 
 # AI Models and Tokenizers
+model.onnx
 *.onnx
-*tokenizer.json
+sentencepiece.bpe.model
+tokenizer.json
+tokenizer_config.json
+special_tokens_map.json
+config.json
 
 # User-specific files
 *.rsuser
