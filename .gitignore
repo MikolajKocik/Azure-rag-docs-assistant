@@ -33,9 +33,6 @@ tokenizer_config.json
 special_tokens_map.json
 config.json
 
-# C# Dev Kit
-**/AiKnowledgeAssistant.csproj.lscache
-
 # User-specific files
 *.rsuser
 *.suo
@@ -459,3 +456,4 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+AIAssistantTests/AIAssistantTests.csproj.lscache
