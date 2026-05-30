@@ -22,6 +22,10 @@ terraform plan
 terraform apply
 ```
 
+!["terraform init](/docs/pictures/terraform-init.png)
+!["terraform plan"](/docs/pictures/terraform-plan.png)
+!["terraform apply](/docs/pictures/terraform-apply.png)
+
 Then set Key Vault secrets:
 
 ```bash
