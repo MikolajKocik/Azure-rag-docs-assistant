@@ -1,0 +1,8 @@
+{
+  "name": "local_reranker_top50_to_top3",
+  "overrides": {
+    "Rag:Ranker": "local_reranker",
+    "Rag:VectorTopK": 50,
+    "Rag:FinalTopK": 3
+  }
+}

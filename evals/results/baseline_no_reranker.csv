@@ -1,0 +1,36 @@
+question_id,experiment,question,answer,expected_answer_contains,contains_expected,latency_ms,status_code,error,notes
+q001,baseline_no_reranker,What is the maximum file size a user can upload?,The maximum file size a user can upload is **30 MB**.,30 MB; 30MB,True,1892,200,,
+q002,baseline_no_reranker,What is the name of the Azure AI Search index used to store chunks and embeddings?,The name of the Azure AI Search index used to store chunks and embeddings is `documents-index`.,documents-index,True,1594,200,,
+q003,baseline_no_reranker,Which Azure Document Intelligence model is used for text extraction?,The Azure Document Intelligence model used for text extraction is the **`prebuilt-document`** model.,prebuilt-document,True,1090,200,,
+q004,baseline_no_reranker,"Describe the chunking strategy used when splitting extracted text, including the token limits applied.","The chunking strategy used when splitting extracted text involves the following rules:
+
+- Maximum **100 tokens per line**
+- Maximum **1000 tokens per paragraph**
+
+Chunking preserves semantic boundaries where possible to improve retrieval quality.",100 tokens; 1000 tokens; line; paragraph,True,1712,200,,
+q005,baseline_no_reranker,"How does the reranking retrieval strategy work, and how many candidate chunks does it initially retrieve before selecting the final context?","The reranking retrieval strategy performs a vector similarity search and retrieves the **top 50** candidate chunks. It then passes these 50 candidates through a **local ONNX cross-encoder reranker**, which scores each (question, chunk) pair and selects the **final top 3** chunks.",50; cross-encoder; top 3; ONNX,True,2094,200,,
+q006,baseline_no_reranker,"What interface do both the baseline and reranking implementations satisfy, and what configuration key controls which ranker is active?",Both the baseline and reranking implementations satisfy the **`IChunkRanker`** interface. The configuration key that controls which ranker is active is **`Rag:Ranker`**.,IChunkRanker; Rag:Ranker,True,1321,200,,
+q007,baseline_no_reranker,What are the three Azure Blob Storage containers used by the system and what is each one used for?,"The three Azure Blob Storage containers used by the system and their purposes are:
+
+1. **Primary blob container** - Stores original uploaded files.
+2. **Extract container** - Stores extracted metadata produced during processing.
+3. **Copy container** - Stores copied versions of uploaded files.",primary; extract; copy; original; metadata,True,1637,200,,
+q008,baseline_no_reranker,Compare the baseline retrieval strategy and the reranking strategy. What are the key differences in how they select the final chunks returned to the language model?,"The key differences between the baseline retrieval strategy and the reranking strategy in how they select the final chunks returned to the language model are as follows:
+
+1. **Number of Candidates Retrieved**:
+   - **Baseline Retrieval**: Performs a vector similarity search and returns the **top 3** results directly as the final context.
+   - **Reranking Strategy**: Performs a vector similarity search and retrieves the **top 50** candidate chunks.
+
+2. **Reranking Process**:
+   - **Baseline Retrieval**: Does not involve any reranking; it simply passes the top 3 candidates through without any further evaluation.
+   - **Reranking Strategy**: Passes the top 50 candidates through a **local ONNX cross-encoder reranker**, which scores each (question, chunk) pair and selects the **final top 3** chunks based on these scores.
+
+3. **Implementation**:
+   - **Baseline Retrieval**: Implemented by **`NoOpChunkRanker`**, which does not perform any reranking.
+   - **Reranking Strategy**: Implemented by **`LocalRankerService`**, which includes the additional step of reranking the candidates.
+
+These differences impact the quality and relevance of the chunks returned to the language model, with the reranking strategy potentially providing more contextually appropriate responses.",top 3; top 50; NoOpChunkRanker; LocalRankerService; cross-encoder; vector,True,3191,200,,
+q009,baseline_no_reranker,What are the trade-offs of using LocalRankerService over NoOpChunkRanker in terms of retrieval pipeline complexity and the number of candidates processed?,Sorry but I dont have any information about this question.,50; 3; ONNX; LocalRankerService; NoOpChunkRanker,False,1205,200,,
+q010,baseline_no_reranker,"Explain why the assistant might respond that it does not have information about a question, and trace back which part of the architecture causes this behaviour.",,context; retrieved; does not have information; grounded,False,1533,500,"{""type"":""https://tools.ietf.org/html/rfc9110#section-15.6.1"",""title"":""Internal error"",""status"":500,""detail"":""Error occurred while answering question: HTTP 400 (content_filter)\nParameter: prompt\n\nThe response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766""}",
+q011,baseline_no_reranker,What is the maximum number of documents a single user account can have stored at one time?,Sorry but I dont have any information about this question.,does not have information; not specified; not mentioned,False,975,200,,
+q012,baseline_no_reranker,Which language model version or deployment name is used for answer generation?,Sorry but I dont have any information about this question.,does not have information; not specified; not available,False,948,200,,

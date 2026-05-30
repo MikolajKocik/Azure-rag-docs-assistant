@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Python
+**/.venv
+
 # Terraform
 **/.terraform/
 *.tfstate
@@ -29,6 +32,9 @@ tokenizer.json
 tokenizer_config.json
 special_tokens_map.json
 config.json
+
+# C# Dev Kit
+**/AiKnowledgeAssistant.csproj.lscache
 
 # User-specific files
 *.rsuser

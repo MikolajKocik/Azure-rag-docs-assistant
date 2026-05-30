@@ -1,0 +1,8 @@
+{
+  "name": "baseline_vector_only",
+  "overrides": {
+    "Rag:Ranker": "none",
+    "Rag:VectorTopK": 3,
+    "Rag:FinalTopK": 3
+  }
+}
