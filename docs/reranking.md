@@ -82,13 +82,12 @@ Costs:
 - more complex pipeline
 - model/tokenizer maintenance
 
-## Engineering note
+> [!NOTE]
+> The reranker is implemented behind the `IChunkRanker` interface.
+> This allows switching between:
 
-The reranker is implemented behind the `IChunkRanker` interface.
-This allows switching between:
+> - `NoOpChunkRanker`
+> - `LocalRankerService`
 
-- `NoOpChunkRanker`
-- `LocalRankerService`
-
-without changing the main RAG pipeline logic.
-The selected ranker can be controlled through configuration, which makes benchmarking and experimentation easier.
+> without changing the main RAG pipeline logic.
+> The selected ranker can be controlled through configuration, which makes benchmarking and experimentation easier.
